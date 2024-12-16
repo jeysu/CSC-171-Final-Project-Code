@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Troop Composition Optimizer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5 text-center">
+        <h1 class="mb-4">Troop Composition Optimizer</h1>
+        
+        <nav aria-label="Generation navigation">
+            <ul class="nav nav-pills justify-content-center mb-4" id="generationTabs" role="tablist">
+                {% for generation in generations_data %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {{ 'active' if loop.first else '' }}" 
+                            id="gen-{{ generation.generation_number }}-tab" 
+                            data-bs-toggle="pill" 
+                            data-bs-target="#generation-{{ generation.generation_number }}"
+                            type="button" 
+                            role="tab" 
+                            aria-controls="generation-{{ generation.generation_number }}"
+                            aria-selected="{{ 'true' if loop.first else 'false' }}">
+                        Gen {{ generation.generation_number }}
+                    </button>
+                </li>
+                {% endfor %}
+            </ul>
+        </nav>
+
+        <div class="tab-content" id="generationTabContent">
+            {% for generation in generations_data %}
+            <div class="tab-pane fade {{ 'show active' if loop.first else '' }}" 
+                 id="generation-{{ generation.generation_number }}"
+                 role="tabpanel" 
+                 aria-labelledby="gen-{{ generation.generation_number }}-tab">
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h3>Generation {{ generation.generation_number }}</h3>
+                        <p>Enemy Composition: {{generation.enemy_composition}}
+                            Best Individual: {{ generation.best_individual }} 
+                           (Fitness: {{ '%.4f'|format(generation.best_fitness) }})
+                        </p>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive table-container">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Individual</th>
+                                        <th>Win Probability</th>
+                                        <th>Cost Penalty</th>
+                                        <th>Fitness Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set population_with_fitness = [] %}
+                                    {% for individual in generation.population %}
+                                        {% set _ = population_with_fitness.append({
+                                            'individual': individual, 
+                                            'win_probability': generation.total_win_probability_scores[loop.index0],
+                                            'cost_penalty': generation.cost_penalty_scores[loop.index0],
+                                            'fitness': generation.fitness_scores[loop.index0]
+                                        }) %}
+                                    {% endfor %}
+                                    
+                                    {% set sorted_population = population_with_fitness|sort(attribute='fitness', reverse=true) %}
+                                    
+                                    {% for item in sorted_population %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>{{ item.individual }}</td>
+                                        <td>{{ '%.4f'|format(item.win_probability) }}</td>
+                                        <td>{{ '%.4f'|format(item.cost_penalty) }}</td>
+                                        <td>{{ '%.4f'|format(item.fitness) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
